@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+    <header>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSskqKoU9CXrPFsrcvFQPYZqweeHfycPcnR-DJtSABUHg&s=10" width="30" style="filter: invert(1);">
+        <a href="page.html">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" width="90" style="margin-left: 15px;">
+        </a>
+        <input type="text" placeholder="Buscar">
+    </header>
+
+    <div class="layout-reproductor">
+        <main>
+            <video id="video-player" width="100%" controls autoplay></video>
+            
+            <h1 id="video-titulo" style="font-size: 20px; margin: 15px 0 5px 0;"></h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #3f3f3f; padding-bottom: 15px;">
+                <div style="display: flex; flex-direction: column;">
+                    <p id="video-vistas" style="color: #aaa; font-size: 14px; margin-bottom: 12px;"></p>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="https://cdn-icons-png.flaticon.com/512/12225/12225881.png" class="imagen_perfil">
+                        <strong id="video-creador" style="font-size: 16px;"></strong>
+                    </div>
+                </div>
+                <button style="background-color: white; color: black; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer;">Suscribirse</button>
+            </div>
+            
+            <section class="comentarios-section">
+                <h2>Comentarios</h2>
+                <form id="form-comentario" class="form-comentario">
+                    <input type="text" id="input-autor" placeholder="Tu nombre" required>
+                    <textarea id="input-texto" placeholder="Escribe un comentario..." required></textarea>
+                    <button type="submit">Comentar</button>
+                </form>
+                <div id="lista-comentarios"></div>
+            </section>
+        </main>
+
+        <aside>
+            <h3 style="margin-bottom: 15px;">Recomendados</h3>
+            <div id="lista-recomendaciones" class="galeria-videos" style="grid-template-columns: 1fr;"></div>
+        </aside>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get("id");
+
+        if (videoId) {
+            fetch("http://localhost:8000/videos/" + videoId)
+                .then(res => res.json())
+                .then(video => {
+                    document.getElementById("video-player").src = video.source;
+                    document.getElementById("video-titulo").textContent = video.titulo;
+                    document.getElementById("video-vistas").textContent = video.vistas + " vistas";
+                    document.getElementById("video-creador").textContent = video.creador;
+                });
+
+            fetch("http://localhost:8000/videos/" + videoId + "/recomendaciones")
+                .then(res => res.json())
+                .then(videos => {
+                    const aside = document.getElementById("lista-recomendaciones");
+                    videos.forEach(v => {
+                        const article = document.createElement("article");
+                        article.className = "video-card";
+                        
+                        const enlace = document.createElement("a");
+                        enlace.href = "reproductor.html?id=" + v.id;
+                        enlace.style.textDecoration = "none";
+                        
+                        const img = document.createElement("img");
+                        img.src = v.miniatura;
+                        
+                        const h4 = document.createElement("h4");
+                        h4.style.marginTop = "5px";
+                        h4.style.color = "white";
+                        h4.textContent = v.titulo;
+                        
+                        enlace.appendChild(img);
+                        enlace.appendChild(h4);
+                        article.appendChild(enlace);
+                        aside.appendChild(article);
+                    });
+                });
+
+            function cargarComentarios() {
+                fetch("http://localhost:8000/videos/" + videoId + "/comentarios")
+                    .then(res => res.json())
+                    .then(comentarios => {
+                        const lista = document.getElementById("lista-comentarios");
+                        lista.textContent = ""; 
+                        comentarios.forEach(c => {
+                            agregarComentario(c, lista, false);
+                        });
+                    });
+            }
+
+            cargarComentarios();
+
+            document.getElementById("form-comentario").addEventListener("submit", function(event) {
+                event.preventDefault();
+                
+                const autor = document.getElementById("input-autor").value;
+                const texto = document.getElementById("input-texto").value;
+
+                fetch("http://localhost:8000/videos/" + videoId + "/comentarios", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "autor": autor, "texto": texto })
+                })
+                .then(res => res.json())
+                .then(nuevoComentario => {
+                    const lista = document.getElementById("lista-comentarios");
+                    agregarComentario(nuevoComentario, lista, true);
+                    document.getElementById("form-comentario").reset();
+                });
+            });
+
+            function agregarComentario(comentario, contenedor, alPrincipio) {
+                const div = document.createElement("div");
+                div.className = "comentario-item";
+                
+                const strong = document.createElement("strong");
+                strong.textContent = comentario.autor;
+                
+                const p = document.createElement("p");
+                p.textContent = comentario.texto;
+                
+                div.appendChild(strong);
+                div.appendChild(p);
+                
+                if (alPrincipio === true) {
+                    contenedor.insertBefore(div, contenedor.firstChild);
+                } else {
+                    contenedor.appendChild(div);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

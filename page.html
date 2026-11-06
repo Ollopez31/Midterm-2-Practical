@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Youtube - Inicio</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+    <header>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSskqKoU9CXrPFsrcvFQPYZqweeHfycPcnR-DJtSABUHg&s=10" width="30" style="filter: invert(1);">
+        <a href="page.html">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/YouTube_Logo_2017.svg" width="90" style="margin-left: 15px;">
+        </a>
+        <input type="text" placeholder="Buscar">
+    </header>
+
+    <div class="layout-principal">
+        <aside class="menu-lateral">
+            <nav>
+                <a href="page.html">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1946/1946436.png" width="24" style="filter: invert(1); background: transparent;">
+                </a>
+            </nav>
+        </aside>
+
+        <main>
+            <section id="galeria-videos" class="galeria-videos"></section>
+        </main>
+    </div>
+
+    <script>
+      fetch("http://localhost:8000/videos/")
+            .then(res => res.json())
+            .then(videos => {
+                const galeria = document.getElementById("galeria-videos");
+                
+                videos.forEach(video => {
+                    const article = document.createElement("article");
+                    article.className = "video-card";
+
+                    const enlace = document.createElement("a");
+                    enlace.href = "reproductor.html?id=" + video.id;
+                    enlace.style.textDecoration = "none";
+
+                    const imgMiniatura = document.createElement("img");
+                    imgMiniatura.src = video.miniatura;
+                    
+                    const divInfo = document.createElement("div");
+                    divInfo.className = "info-container";
+
+                    const imgPerfil = document.createElement("img");
+                    imgPerfil.className = "imagen_perfil";
+                    imgPerfil.src = "https://cdn-icons-png.flaticon.com/512/12225/12225881.png";
+
+                    const divTextos = document.createElement("div");
+                    
+                    const h2Titulo = document.createElement("h2");
+                    h2Titulo.className = "titulo_video";
+                    h2Titulo.textContent = video.titulo;
+
+                    const pCategoria = document.createElement("p");
+                    pCategoria.style.fontSize = "12px";
+                    pCategoria.style.color = "#aaa";
+                    pCategoria.textContent = video.categoria;
+
+                    divTextos.appendChild(h2Titulo);
+                    divTextos.appendChild(pCategoria);
+                    
+                    divInfo.appendChild(imgPerfil);
+                    divInfo.appendChild(divTextos);
+
+                    enlace.appendChild(imgMiniatura);
+                    enlace.appendChild(divInfo);
+                    
+                    article.appendChild(enlace);
+                    galeria.appendChild(article);
+                });
+            });
+    </script>
+</body>
+</html>
